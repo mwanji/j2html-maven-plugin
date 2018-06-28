@@ -8,17 +8,17 @@ import com.squareup.javapoet.*;
 
 import javax.lang.model.element.Modifier;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import static org.apache.commons.lang3.StringUtils.*;
 
 public class ContainerTagGenerator {
 
     public void execute(Path jsonFile, Path baseOutputDir) {
+
+        TypeSpec.Builder tagCreatorSpec = TypeSpec.classBuilder(ClassName.get("j2html.tags", "TagCreator2"))
+          .addMethod(MethodSpec.constructorBuilder().addModifiers(Modifier.PRIVATE).build());
 
         try (FileReader fileReader = new FileReader(jsonFile.toFile())) {
             JsonObject json = new Gson().fromJson(fileReader, JsonObject.class);
@@ -28,6 +28,33 @@ public class ContainerTagGenerator {
 
                 String tag = tagJson.get("tag").getAsString();
                 ClassName tagClassName = ClassName.get("j2html.tags", capitalize(tag + "Tag"));
+
+                tagCreatorSpec.addMethod(
+                  MethodSpec.methodBuilder(tag)
+                    .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                    .returns(tagClassName)
+                    .addStatement("return new $T()", tagClassName)
+                    .build()
+                );
+                tagCreatorSpec.addMethod(
+                  MethodSpec.methodBuilder(tag)
+                    .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                    .returns(tagClassName)
+                    .addParameter(String.class, "text")
+                    .addStatement("return new $T().withText(text)", tagClassName)
+                    .build()
+                );
+                tagCreatorSpec.addMethod(
+                  MethodSpec.methodBuilder(tag)
+                    .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                    .returns(tagClassName)
+                    .addParameter(String.class, "text")
+                    .addParameter(ArrayTypeName.of(ClassName.get("j2html.tags", "DomContent")), "dc")
+                    .varargs()
+                    .addStatement("return new $T().withText(text)", tagClassName)
+                    .build()
+                );
+
                 TypeSpec.Builder typeSpec = TypeSpec.classBuilder(tagClassName)
                   .superclass(ParameterizedTypeName.get(containerTagClassName, tagClassName))
                   .addMethod(
@@ -64,18 +91,10 @@ public class ContainerTagGenerator {
                     typeSpec.addMethod(methodSpec.build())
                       .addMethod(condMethodSpec.build());
 
-                    Path outputFile = baseOutputDir.resolve(Paths.get("j2html", "tags"));
-
-
                     try {
-                        Files.createDirectories(outputFile);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                    try (FileWriter writer = new FileWriter(outputFile.resolve(tagClassName.simpleName() + ".java").toFile())) {
                         JavaFile.builder("j2html.tags", typeSpec.build())
                           .build()
-                          .writeTo(writer);
+                          .writeTo(baseOutputDir);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
@@ -83,6 +102,14 @@ public class ContainerTagGenerator {
 
             });
         } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        try {
+            JavaFile.builder("j2html.tags", tagCreatorSpec.build())
+              .build()
+              .writeTo(baseOutputDir);
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }

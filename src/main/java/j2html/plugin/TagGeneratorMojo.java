@@ -7,6 +7,8 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -23,6 +25,14 @@ public class TagGeneratorMojo extends AbstractMojo {
   public void execute() throws MojoExecutionException, MojoFailureException {
     Path tagClassesJson = Paths.get(projectResourcesDir, "tagClasses.json");
 
-    new ContainerTagGenerator().execute(tagClassesJson, Paths.get(projectBuildDir, "generated-sources", "j2html"));
+    Path baseOutputDir = Paths.get(projectBuildDir, "generated-sources", "j2html");
+
+    try {
+      Files.createDirectories(baseOutputDir);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+
+    new ContainerTagGenerator().execute(tagClassesJson, baseOutputDir);
   }
 }
