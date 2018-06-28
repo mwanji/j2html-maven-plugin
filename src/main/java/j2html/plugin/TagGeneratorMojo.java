@@ -16,16 +16,13 @@ public class TagGeneratorMojo extends AbstractMojo {
   @Parameter(defaultValue = "${project.build.directory}")
   private String projectBuildDir;
 
-  @Parameter(defaultValue = "${project.build.resources.resource.directory}")
+  @Parameter(defaultValue = "${project.build.resources[0].directory}")
   private String projectResourcesDir;
 
   @Override
   public void execute() throws MojoExecutionException, MojoFailureException {
-    Path tagClassesJson = Paths.get("src", "main", "resources", "tagClasses.json");
-    getLog().info("Build dir is: " + projectBuildDir);
-    getLog().info("manual: " + tagClassesJson);
-    getLog().info("Build resources is: " + projectResourcesDir);
+    Path tagClassesJson = Paths.get(projectResourcesDir, "tagClasses.json");
 
-    new TagCreatorCodeGeneratorFromJson().execute(tagClassesJson, Paths.get(projectBuildDir, "generated-sources", "j2html"));
+    new ContainerTagGenerator().execute(tagClassesJson, Paths.get(projectBuildDir, "generated-sources", "j2html"));
   }
 }

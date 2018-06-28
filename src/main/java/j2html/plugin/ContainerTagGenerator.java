@@ -16,7 +16,7 @@ import java.nio.file.Paths;
 
 import static org.apache.commons.lang3.StringUtils.*;
 
-public class TagCreatorCodeGeneratorFromJson {
+public class ContainerTagGenerator {
 
     public void execute(Path jsonFile, Path baseOutputDir) {
 
