@@ -33,6 +33,7 @@ public class TagGeneratorMojo extends AbstractMojo {
       throw new RuntimeException(e);
     }
 
+    new TagCreatorGenerator().execute(tagClassesJson, baseOutputDir);
     new ContainerTagGenerator().execute(tagClassesJson, baseOutputDir);
   }
 }
