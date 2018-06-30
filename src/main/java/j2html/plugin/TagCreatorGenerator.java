@@ -12,17 +12,16 @@ import static org.apache.commons.lang3.StringUtils.*;
 
 public class TagCreatorGenerator {
 
-  public void execute(Path jsonFile, Path baseOutputDir) {
+  public void execute(Path tagClassesJsonPath, Path baseOutputDir) {
 
     TypeSpec.Builder tagCreatorSpec = TypeSpec.classBuilder(ClassName.get("j2html.tags", "TagCreator2"))
       .addMethod(MethodSpec.constructorBuilder().addModifiers(Modifier.PRIVATE).build());
 
-    try (FileReader fileReader = new FileReader(jsonFile.toFile())) {
+    try (FileReader fileReader = new FileReader(tagClassesJsonPath.toFile())) {
       JsonObject json = new Gson().fromJson(fileReader, JsonObject.class);
-      json.getAsJsonArray("tags").forEach(element -> {
-          JsonObject tagJson = element.getAsJsonObject();
 
-          String tag = tagJson.get("tag").getAsString();
+      json.getAsJsonArray("tags").forEach(element -> {
+          String tag = element.isJsonObject() ? element.getAsJsonObject().get("tag").getAsString() : element.getAsString();
           ClassName tagClassName = ClassName.get("j2html.tags", capitalize(tag + "Tag"));
 
           tagCreatorSpec.addMethod(

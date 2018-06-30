@@ -26,6 +26,7 @@ public class TagGeneratorMojo extends AbstractMojo {
     Path tagClassesJson = Paths.get(projectResourcesDir, "tagClasses.json");
 
     Path baseOutputDir = Paths.get(projectBuildDir, "generated-sources", "j2html");
+    Path globalAttributesJson = Paths.get(projectResourcesDir, "globalAttributes.json");
 
     try {
       Files.createDirectories(baseOutputDir);
@@ -34,6 +35,6 @@ public class TagGeneratorMojo extends AbstractMojo {
     }
 
     new TagCreatorGenerator().execute(tagClassesJson, baseOutputDir);
-    new ContainerTagGenerator().execute(tagClassesJson, baseOutputDir);
+    new ContainerTagGenerator().execute(tagClassesJson, globalAttributesJson, baseOutputDir);
   }
 }
